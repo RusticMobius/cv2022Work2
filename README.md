@@ -1,3 +1,8 @@
+##注：该版本是我修改了需要用到cuda的部分得到的一个可以运行的版本，运行配置和源项目一样，有问题请联系1070008296（qq)
+对于三通道24位mask文件加入了8位转换，convert文件夹里有一些可能用到的工具文件
+本项目使用的人体语义解析项目为CIHP_PGN（https://github.com/Engineering-Course/CIHP_PGN）
+使用的人体关键点识别为https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases cpu版本
+
 ## VITON-HD &mdash; Official PyTorch Implementation
 
 ![Teaser image](./assets/teaser.png)
