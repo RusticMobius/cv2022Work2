@@ -13,7 +13,7 @@ device = ('cuda' if torch.cuda.is_available() else 'cpu')
 
 def get_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--name', type=str, default="myTest")
+    parser.add_argument('--name', type=str, default="result")
     # parser.add_argument('--test_device', default="cpu:0", type=str,
     #                     help='cpu:0')
     parser.add_argument('--test_device', default="cuda:0 or cpu", type=str,

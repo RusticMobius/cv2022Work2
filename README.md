@@ -4,6 +4,8 @@ grabcut不太好用，边缘抖动无法处理，所以我手动扣了图又转�
 本项目使用的人体语义解析项目为CIHP_PGN（https://github.com/Engineering-Course/CIHP_PGN）
 使用的人体关键点识别为https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases cpu版本,模型为body_25
 源程序readme见README_ORI
+请注意运行时定义test_pairs.txt文件
+
 
 改进点：通过程序实现抠图取衣物mask，优化边缘抖动，抠图还是黑色背景好，但是换背景还得抠图...
 拟合效果仍然有问题，部分非正面衣物或原图衣物边缘及褶皱会给拟合结果带来奇怪的扭曲效果

@@ -228,7 +228,7 @@ import argparse
 
 def get_opt():
   parser = argparse.ArgumentParser()
-  parser.add_argument('--name', type=str, default="myTest")
+  parser.add_argument('--name', type=str, default="result")
 
   parser.add_argument('-b', '--batch_size', type=int, default=1)
   parser.add_argument('-j', '--workers', type=int, default=1)
