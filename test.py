@@ -9,11 +9,15 @@ import torchgeometry as tgm
 from datasets import VITONDataset, VITONDataLoader
 from networks import SegGenerator, GMM, ALIASGenerator
 from utils import gen_noise, load_checkpoint, save_images
-
+device = ('cuda' if torch.cuda.is_available() else 'cpu')
 
 def get_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--name', type=str, required=True)
+    parser.add_argument('--name', type=str, default="myTest")
+    # parser.add_argument('--test_device', default="cpu:0", type=str,
+    #                     help='cpu:0')
+    parser.add_argument('--test_device', default="cuda:0 or cpu", type=str,
+                        help='cuda:0 or cpu')
 
     parser.add_argument('-b', '--batch_size', type=int, default=1)
     parser.add_argument('-j', '--workers', type=int, default=1)
@@ -22,7 +26,7 @@ def get_opt():
     parser.add_argument('--shuffle', action='store_true')
 
     parser.add_argument('--dataset_dir', type=str, default='./datasets/')
-    parser.add_argument('--dataset_mode', type=str, default='test')
+    parser.add_argument('--dataset_mode', type=str, default='test1')
     parser.add_argument('--dataset_list', type=str, default='test_pairs.txt')
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/')
     parser.add_argument('--save_dir', type=str, default='./results/')
@@ -55,7 +59,7 @@ def get_opt():
 def test(opt, seg, gmm, alias):
     up = nn.Upsample(size=(opt.load_height, opt.load_width), mode='bilinear')
     gauss = tgm.image.GaussianBlur((15, 15), (3, 3))
-    gauss.cuda()
+    gauss.to(device)
 
     test_dataset = VITONDataset(opt)
     test_loader = VITONDataLoader(opt, test_dataset)
@@ -65,24 +69,24 @@ def test(opt, seg, gmm, alias):
             img_names = inputs['img_name']
             c_names = inputs['c_name']['unpaired']
 
-            img_agnostic = inputs['img_agnostic'].cuda()
-            parse_agnostic = inputs['parse_agnostic'].cuda()
-            pose = inputs['pose'].cuda()
-            c = inputs['cloth']['unpaired'].cuda()
-            cm = inputs['cloth_mask']['unpaired'].cuda()
+            img_agnostic = inputs['img_agnostic'].to(device)
+            parse_agnostic = inputs['parse_agnostic'].to(device)
+            pose = inputs['pose'].to(device)
+            c = inputs['cloth']['unpaired'].to(device)
+            cm = inputs['cloth_mask']['unpaired'].to(device)
 
             # Part 1. Segmentation generation
             parse_agnostic_down = F.interpolate(parse_agnostic, size=(256, 192), mode='bilinear')
             pose_down = F.interpolate(pose, size=(256, 192), mode='bilinear')
             c_masked_down = F.interpolate(c * cm, size=(256, 192), mode='bilinear')
             cm_down = F.interpolate(cm, size=(256, 192), mode='bilinear')
-            seg_input = torch.cat((cm_down, c_masked_down, parse_agnostic_down, pose_down, gen_noise(cm_down.size()).cuda()), dim=1)
+            seg_input = torch.cat((cm_down, c_masked_down, parse_agnostic_down, pose_down, gen_noise(cm_down.size()).to(device)), dim=1)
 
             parse_pred_down = seg(seg_input)
             parse_pred = gauss(up(parse_pred_down))
             parse_pred = parse_pred.argmax(dim=1)[:, None]
 
-            parse_old = torch.zeros(parse_pred.size(0), 13, opt.load_height, opt.load_width, dtype=torch.float).cuda()
+            parse_old = torch.zeros(parse_pred.size(0), 13, opt.load_height, opt.load_width, dtype=torch.float).to(device)
             parse_old.scatter_(1, parse_pred, 1.0)
 
             labels = {
@@ -94,7 +98,7 @@ def test(opt, seg, gmm, alias):
                 5:  ['right_arm',   [6]],
                 6:  ['noise',       [12]]
             }
-            parse = torch.zeros(parse_pred.size(0), 7, opt.load_height, opt.load_width, dtype=torch.float).cuda()
+            parse = torch.zeros(parse_pred.size(0), 7, opt.load_height, opt.load_width, dtype=torch.float).to(device)
             for j in range(len(labels)):
                 for label in labels[j][1]:
                     parse[:, j] += parse_old[:, label]
@@ -129,6 +133,7 @@ def test(opt, seg, gmm, alias):
 
 
 def main():
+
     opt = get_opt()
     print(opt)
 
@@ -145,11 +150,12 @@ def main():
     load_checkpoint(gmm, os.path.join(opt.checkpoint_dir, opt.gmm_checkpoint))
     load_checkpoint(alias, os.path.join(opt.checkpoint_dir, opt.alias_checkpoint))
 
-    seg.cuda().eval()
-    gmm.cuda().eval()
-    alias.cuda().eval()
+    seg.to(device).eval()
+    gmm.to(device).eval()
+    alias.to(device).eval()
     test(opt, seg, gmm, alias)
 
 
 if __name__ == '__main__':
+
     main()

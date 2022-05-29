@@ -38,3 +38,4 @@ def load_checkpoint(model, checkpoint_path):
     if not os.path.exists(checkpoint_path):
         raise ValueError("'{}' is not a valid checkpoint path".format(checkpoint_path))
     model.load_state_dict(torch.load(checkpoint_path))
+
